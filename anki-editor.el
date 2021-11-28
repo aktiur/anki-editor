@@ -232,7 +232,7 @@ request directly, it simply queues the request."
 (defun anki-editor-api--note (note)
   "Convert NOTE to the form that AnkiConnect accepts."
   (list
-   :id (string-to-number (or (anki-editor-note-id note) "0"))
+   :id (or (anki-editor-note-id note) 0)
    :deckName (anki-editor-note-deck note)
    :modelName (anki-editor-note-model note)
    :fields (anki-editor-note-fields note)
@@ -605,7 +605,8 @@ Where the subtree is created depends on PREFIX."
   (let ((org-trust-scanner-tags t)
         (deck (org-entry-get-with-inheritance anki-editor-prop-deck))
         (format (anki-editor-entry-format))
-        (note-id (org-entry-get nil anki-editor-prop-note-id))
+        (note-id (let ((-id (org-entry-get nil anki-editor-prop-note-id)))
+                   (when -id (string-to-number -id))))
         (note-type (org-entry-get nil anki-editor-prop-note-type))
         (tags (cl-set-difference (anki-editor--get-tags)
                                  anki-editor-ignored-org-tags
