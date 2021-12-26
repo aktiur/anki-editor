@@ -1,0 +1,24 @@
+A simple collection of sample cards used in testing.
+
+* Simple card
+:PROPERTIES:
+:ANKI_NOTE_TYPE: Basic
+:ANKI_DECK: Default
+:END:
+** Front
+The *front* from a /simple/ card.
+** Back
+The *back* from a /simple/ card.
+
+* Card with attachment
+:PROPERTIES:
+:ANKI_NOTE_TYPE: Basic
+:ANKI_DECK: Default
+:ANKI_NOTE_ID: 1136456213687
+:ID:       c527faa2-770a-4be3-9d74-ef8ec909e5ed
+:END:
+
+** Front
+Image below
+
+[[attachment:unicorn.png]]
