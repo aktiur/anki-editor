@@ -202,6 +202,7 @@ or raise an error."
   "Use in combination with `anki-editor-api-enqueue' to combine
 multiple api calls into a single 'multi' call, return the results
 of these calls in the same order."
+  (declare (debug (body)))
   `(let (--anki-editor-var-multi-actions--
          --anki-editor-var-multi-results--)
      ,@body
@@ -223,6 +224,7 @@ of these calls in the same order."
   "Like `anki-editor-api-call', but is only used in combination
 with `anki-editor-api-with-multi'.  Instead of sending the
 request directly, it simply queues the request."
+  (declare (debug (sexp &rest [sexp form])))
   `(let ((action (list :action ,action))
          (params (list ,@params)))
      (when params
