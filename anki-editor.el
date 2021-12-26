@@ -393,18 +393,28 @@ The implementation is borrowed and simplified from ox-html."
            (t (throw 'giveup nil)))))
       (funcall oldfun link desc info)))
 
-(defun anki-editor--export-string (src fmt)
+(defun anki-editor--export-string (beg end fmt)
+  "Export text between BEG and END using FMT."
   (cl-ecase fmt
-    ('nil src)
-    ('t (or (org-export-string-as src
-                                  anki-editor--ox-anki-html-backend
-                                  t
-                                  anki-editor--ox-export-ext-plist)
-            ;; 8.2.10 version of
-            ;; `org-export-filter-apply-functions'
-            ;; returns nil for an input of empty string,
-            ;; which will cause AnkiConnect to fail
-            ""))))
+    ('nil (buffer-substring-no-properties beg end))
+    ('t
+     (save-excursion
+       (save-restriction
+         ;; narrowing to region and using `org-export-as' instead of usinge
+         ;; `org-export-string-as' ensures property inheritance works properly
+         ;; when exporting, regarding attachment location for instance.
+         (narrow-to-region beg end)
+         (or
+          (org-export-as anki-editor--ox-anki-html-backend
+                         nil
+                         nil
+                         t
+                         anki-editor--ox-export-ext-plist)
+          ;; 8.2.10 version of
+          ;; `org-export-filter-apply-functions'
+          ;; returns nil for an input of empty string,
+          ;; which will cause AnkiConnect to fail
+          ""))))))
 
 
 ;;; Core primitives
@@ -622,9 +632,7 @@ Where the subtree is created depends on PREFIX."
                            :test #'string=)))
         ;; use heading as the missing field
         (push (cons (car missing)
-                    (anki-editor--export-string
-                     (substring-no-properties (org-get-heading t t t))
-                     format))
+                     (substring-no-properties (org-get-heading t t t)))
               fields)))
 
     (unless deck (error "Missing deck"))
@@ -647,7 +655,7 @@ Where the subtree is created depends on PREFIX."
 (defun anki-editor--entry-get-multivalued-property-with-inheritance (pom property)
   "Return a list of values in a multivalued property with inheritance."
   (let* ((value (org-entry-get pom property t))
-	     (values (and value (split-string value))))
+         (values (and value (split-string value))))
     (mapcar #'org-entry-restore-space values)))
 
 (defun anki-editor--build-fields ()
@@ -675,16 +683,7 @@ Return a list of cons of (FIELD-NAME . FIELD-CONTENT)."
                                               '(drawer planning property-drawer))
                                   finally return (org-element-property :begin subelem))
              for end = (org-element-property :contents-end element)
-             for raw = (or (and begin
-                                end
-                                (buffer-substring-no-properties
-                                 begin
-                                 ;; in case the buffer is narrowed,
-                                 ;; e.g. by `org-map-entries' when
-                                 ;; scope is `tree'
-                                 (min (point-max) end)))
-                           "")
-             for content = (anki-editor--export-string raw format)
+             for content = (anki-editor--export-string begin end format)
              collect (cons heading content)
              ;; proceed to next field entry and check last-pt to
              ;; see if it's already the last entry
