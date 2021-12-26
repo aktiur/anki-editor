@@ -270,7 +270,8 @@ The result is the path to the newly stored media file."
   (org-export-create-backend
    :parent 'html
    :transcoders '((latex-fragment . anki-editor--ox-latex)
-                  (latex-environment . anki-editor--ox-latex))))
+                  (latex-environment . anki-editor--ox-latex)
+                  (link . anki-editor--ox-html-link))))
 
 (defconst anki-editor--ox-export-ext-plist
   '(:with-toc nil :with-properties nil :with-planning nil :anki-editor-mode t))
@@ -329,7 +330,7 @@ CONTENTS is nil.  INFO is a plist holding contextual information."
         (replace-regexp-in-string "}}" "} } " code)
       code)))
 
-(defun anki-editor--ox-html-link (oldfun link desc info)
+(defun anki-editor--ox-html-link (link desc info)
   "When LINK is a link to local file, transcodes it to html and stores the target file to Anki, otherwise calls OLDFUN for help.
 The implementation is borrowed and simplified from ox-html."
   (or (catch 'giveup
@@ -391,7 +392,7 @@ The implementation is borrowed and simplified from ox-html."
                            (org-link-unescape path))))
 
            (t (throw 'giveup nil)))))
-      (funcall oldfun link desc info)))
+      (org-html-link link desc info)))
 
 (defun anki-editor--export-string (beg end fmt)
   "Export text between BEG and END using FMT."
@@ -727,8 +728,7 @@ Return a list of cons of (FIELD-NAME . FIELD-CONTENT)."
   (anki-editor-api-check)
   (add-hook 'org-property-allowed-value-functions #'anki-editor--get-allowed-values-for-property nil t)
   (advice-add 'org-set-tags :before #'anki-editor--before-set-tags)
-  (advice-add 'org-get-buffer-tags :around #'anki-editor--get-buffer-tags)
-  (advice-add 'org-html-link :around #'anki-editor--ox-html-link))
+  (advice-add 'org-get-buffer-tags :around #'anki-editor--get-buffer-tags))
 
 (defun anki-editor-teardown-minor-mode ()
   "Tear down this minor mode."
