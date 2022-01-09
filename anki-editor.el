@@ -675,16 +675,21 @@ Return a list of cons of (FIELD-NAME . FIELD-CONTENT)."
              ;; contents-begin includes drawers and scheduling data,
              ;; which we'd like to ignore, here we skip these
              ;; elements and reset contents-begin.
-             for begin = (cl-loop for eoh = (org-element-property :contents-begin element)
+             for contents-begin = (org-element-property :contents-begin element)
+             for begin = (and
+                          contents-begin
+                          (cl-loop for eoh = contents-begin
                                   then (org-element-property :end subelem)
                                   for subelem = (progn
                                                   (goto-char eoh)
                                                   (org-element-context))
                                   while (memq (org-element-type subelem)
                                               '(drawer planning property-drawer))
-                                  finally return (org-element-property :begin subelem))
+                                  finally return (org-element-property :begin subelem)))
              for end = (org-element-property :contents-end element)
-             for content = (anki-editor--export-string begin end format)
+             for content = (if (and begin end)
+                               (anki-editor--export-string begin end format)
+                            "")
              collect (cons heading content)
              ;; proceed to next field entry and check last-pt to
              ;; see if it's already the last entry
