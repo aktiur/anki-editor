@@ -123,6 +123,9 @@ For example, you can put custom styles or scripts in this variable."
 A leading logical operator like `+' or `&' is required."
   :type 'string)
 
+(defcustom anki-editor-default-deck ""
+  "Default deck to add notes to when none has been explicitly assigned."
+  :type 'string)
 
 ;;; AnkiConnect
 
@@ -616,7 +619,8 @@ Where the subtree is created depends on PREFIX."
 (defun anki-editor-note-at-point ()
   "Make a note struct from current entry."
   (let ((org-trust-scanner-tags t)
-        (deck (org-entry-get-with-inheritance anki-editor-prop-deck))
+        (deck (or (org-entry-get-with-inheritance anki-editor-prop-deck)
+                  anki-editor-default-deck))
         (format (anki-editor-entry-format))
         (note-id (let ((-id (org-entry-get nil anki-editor-prop-note-id)))
                    (when -id (string-to-number -id))))
@@ -852,7 +856,13 @@ same as how it is used by `M-RET'(org-insert-heading).
 When note heading is not provided, it is used as the first field."
   (interactive "P")
   (let* ((deck (or (org-entry-get-with-inheritance anki-editor-prop-deck)
-                   (completing-read "Deck: " (sort (anki-editor-deck-names) #'string-lessp))))
+                   (completing-read "Deck: "
+                                    (sort (anki-editor-deck-names) #'string-lessp)
+                                    nil
+                                    nil
+                                    nil
+                                    nil
+                                    anki-editor-default-deck)))
          (type (completing-read "Note type: " (sort (anki-editor-note-types) #'string-lessp)))
          (fields (anki-editor-api-call-result 'modelFieldNames :modelName type))
          (heading (read-from-minibuffer "Note heading (optional): ")))
